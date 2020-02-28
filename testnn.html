@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Testing neural network</title>
+	<script type="text/javascript" src="neural.js"></script>
+</head>
+<body>
+	<canvas id="mycanvas" width="500" height="500" onmousedown="mouseDown(event)"></canvas>
+	<button onclick="addBlue()">Add Blue</button>
+	<button onclick="addGreen()">Add Green</button>
+	<button onclick="train()">Train</button>
+	<script>
+		nn = new neural_network();
+		nn.add_layer(2,5,"sigmoid");
+		nn.add_layer(5,3,"sigmoid");
+		nn.add_layer(3,2,"sigmoid");
+		nn.add_softmax();
+		var indata = [];
+		var outdata = [];
+		var sout = [];
+		var blue = false;
+		var green = false;
+		var istrained = false;
+		var n = 100;
+		var h = Math.round(500/n);
+		var w = Math.round(500/n);
+		var p = new matrix(1,2);
+		ctx = document.getElementById("mycanvas").getContext("2d");
+		var addBlue = function(){
+			blue = true;
+			green = false;
+		}
+		var addGreen = function(){
+			blue = false;
+			green = true;
+		}
+		var mouseDown = function(e){
+			if(istrained){
+				var test = new matrix(1,1);
+				test.from([[e.clientX/500.0,e.clientY/500.0]]);
+				console.log(nn.forward(test));
+				return;
+			}
+			indata.push([e.clientX,e.clientY]);
+			if(blue){
+				outdata.push([0]);
+				sout.push(0);
+			}
+			else{
+				outdata.push([1]);
+				sout.push(1);
+			}
+		}
+		var draw = function(){
+			if(istrained){
+				for(var i = 0;i<n;i++){
+					for(var j = 0;j<n;j++){
+						p.data[0][0] = (i+0.5)*h/500.0;
+						p.data[0][1] = (j+0.5)*w/500.0;
+						var o = nn.forward(p);
+						if(o.data[0][0] > o.data[0][1])
+							ctx.fillStyle = "#2222AA";
+						else
+							ctx.fillStyle = "#22AA22";
+						ctx.fillRect(i*h,j*w,(i+1)*h,(j+1)*w);
+					}
+				}
+			}
+			for(var i in indata){
+				if(outdata[i][0] == 0){
+					ctx.fillStyle = "#0000FF";
+				}
+				else{
+					ctx.fillStyle = "#00FF00";
+				}
+				ctx.beginPath();
+				ctx.arc(indata[i][0],indata[i][1],5,0,2*Math.PI);
+				ctx.fill();
+			}
+		}
+		var train = function(){
+			var iset = new matrix(1,1);
+			var oset = new matrix(1,1);
+			iset.from(indata);
+			oset.from(outdata);
+			iset = iset.times_scalar(1/500.0);
+			nn.train(iset,sout,1000,1);
+			istrained = true;
+		}
+		window.setInterval(draw,10);
+	</script>
+</body>
+</html>
