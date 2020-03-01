@@ -142,10 +142,10 @@ var dtanh = function(x){
 	return (1 - x**2)/2;
 }
 var relu = function(x){
-	return x>=0?x:0.001*x;
+	return x>=0?x:0.1*x;
 }
 var drelu = function(x){
-	return x>=0?1:0.001;
+	return x>=0?1:0.1;
 }
 var linear = function(x){
 	return x;
@@ -163,13 +163,12 @@ var layer = function(nin,nout,act_fun){
 	this.d = null;
 	this.w = new matrix(nin,nout);
 	this.bias = new matrix(1,nout);
-	this.w = this.w.times_scalar(1/nin);
-	this.bias = this.bias.times_scalar(1/nin);
 	this.ones = null;
 	this.forward = function(indata){
 		this.i = indata;
 		var n = this.i.rows;
 		this.ones = new matrix(n,1);
+		this.ones.ones();
 		this.o = indata.dot(this.w).add(this.ones.dot(this.bias));
 		switch(this.act_fun){
 			case "sigmoid":
@@ -224,9 +223,9 @@ var softmax = function(){
 		for(var i = 0;i<indata.rows;i++){
 			s = 0;
 			for(var j = 0;j<indata.cols;j++)
-				s += indata.data[i][j];
+				s += Math.exp(indata.data[i][j]);
 			for(var j = 0;j<indata.cols;j++)
-				this.sm.data[i][j] = indata.data[i][j]/s;
+				this.sm.data[i][j] = Math.exp(indata.data[i][j])/s;
 		}
 		return this.sm;
 	};
@@ -241,7 +240,6 @@ var softmax = function(){
 
 	};
 };
-
 var neural_network = function(){
 	this.layers = [];
 	this.softmax = false;
